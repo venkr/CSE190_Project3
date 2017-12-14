@@ -1,0 +1,383 @@
+<script type="text/javascript" src="blockly/blockly_compressed.js"></script>
+
+<script type="text/javascript" src="blockly/blocks_compressed.js"></script>
+
+
+<script type="text/javascript" src="blockly/javascript_compressed.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+<script type="text/javascript" src="blockly/msg/js/en.js"></script>
+
+<script type="text/javascript" src="customBlocks.js"></script>
+
+<script type='text/javascript'>
+
+    (function()
+    {
+        if( window.localStorage )
+        {
+            if( !localStorage.getItem('firstLoad') )
+            {
+                localStorage['firstLoad'] = true;
+                window.location.reload();
+            }
+            else
+                localStorage.removeItem('firstLoad');
+        }
+    })();
+
+</script>
+
+<style>
+  h1 {
+    color: #111;
+    font-family: 'Open Sans Condensed', sans-serif;
+    font-size: 64px;
+    font-weight: 700;
+    line-height: 64px;
+    margin: 0 0 0;
+    padding: 20px 30px;
+    text-align: center;
+    text-transform:
+    uppercase;
+  }
+</style>
+
+<div id="myModal" class="modal">
+    <img class="modal-content" id="img01">
+</div>
+
+<div style="height:100%;margin-left:10px;margin-right:10px;">
+    <div style=" position:relative; margin-bottom:8px; text-align:center;">
+        <h1>CSE 190 Blockly Playground: Project 3</h1>
+    </div>
+    <div style="margin-left:50%;width:50%;">
+      <img onclick="runCode()" src="images/runButton.png"/>
+      <img onclick="stopCode()" src="images/stopButton.png"/>
+    </div>
+<div style="height: 800px">
+    <div id="blocklyDiv" style="height: 800px; margin-left: 10px; width: 49%; float: left; align:center;">
+    </div>
+
+    <div style="background-color: #FFFFFF; float: left; width: 49%; height: 800px">
+        <div style="height:53%;width:98%;outline-style: solid;outline-width: 1px;text-align:center;margin-left:5px;margin-top:5px;">
+            <div style="position:absolute;z-index:4;width:45%;height:37%">
+                <canvas id="catAnimation"></canvas>
+            </div>
+        </div>
+        <hr>
+        <div style="overflow-y:auto; height:40%;">
+            <table >
+                <tr>
+                    <td>
+                        <img src="images/cat1_numbered.png" style="margin-left:5px;margin-top:5px;outline-style: solid;outline-width: 1px;height:180px;" />
+                    </td>
+                    <td>
+                        <img src="images/cat2_numbered.png" style="margin-left:5px;margin-top:5px;outline-style: solid;outline-width: 1px;height:180px;" />
+                    </td>
+                    <td>
+                        <img src="images/cat3_numbered.png" style="margin-left:5px;margin-top:5px;outline-style: solid;outline-width: 1px;height:180px;" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <img src="images/ele1.png" style="margin-left:5px;margin-top:5px;outline-style: solid;outline-width: 1px;height:180px;" />
+                    </td>
+                    <td>
+                        <img src="images/ele2.png" style="margin-left:5px;margin-top:5px;outline-style: solid;outline-width: 1px;height:180px;" />
+                    </td>
+                    <td>
+                        <img src="images/ele3.png" style="margin-left:5px;margin-top:5px;outline-style: solid;outline-width: 1px;height:180px;" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+  </div>
+    <div style="background-color: #FFA500;height:40px;margin-left:25%;border: 2px solid black;width:50%;text-align:center;font-family: monospace;font-size: 30px;">
+    Javascript Code
+    </div>
+    <div id="codeArea"style="font-family: monospace;height:150px;border: 2px solid black;margin-left:25%;width:50%;overflow-y:auto;font-size: 20px;">
+
+    </div>
+    <hr>
+</div>
+
+<xml id="toolbox" style="display: none">
+    <category name="Events" colour="65">
+        <block type="whenrunclicked"></block>
+        <block type="clearscreen"></block>
+    </category>
+    <category name="cats" colour="175">
+        <block type="catpose"></block>
+        <block type="catmove"></block>
+    </category>
+    <category name="elephants" colour="175">
+        <block type="elepose"></block>
+        <block type="elemove"></block>
+    </category>
+
+    <sep></sep>
+
+    <category name="Logic" colour="210">
+        <block type="logic_compare"></block>
+        <block type="logic_operation"></block>
+        <block type="logic_boolean"></block>
+    </category>
+    <category name="Control" colour="120">
+        <block type="controls_if"></block>
+        <block type="controls_whileUntil"></block>
+        <block type="controls_for"></block>
+    </category>
+    <category name="Math" colour="230">
+        <block type="math_number"></block>
+        <block type="math_arithmetic"></block>
+    </category>
+    <category name="Text" colour="20">
+        <block type="text"></block>
+        <block type="text_print"></block>
+        <block type="showtext"></block>
+    </category>
+    <category name="Variables" colour="330" custom="VARIABLE">
+
+    </category>
+    <category name="Functions" colour="290" custom="PROCEDURE">
+
+    </category>
+</xml>
+<script>
+    var code = "";
+    /*******************************
+     * Setup the Blockly Interface *
+     *******************************/
+    var workspace = Blockly.inject('blocklyDiv',
+        {toolbox: document.getElementById('toolbox')});
+
+    /********************
+     * Setup the Canvas *
+     ********************/
+    var canvas = document.getElementById("catAnimation");
+    canvas.width = 800;
+    canvas.height = 480;
+
+    var ctx = document.getElementById('catAnimation').getContext('2d');
+
+    var animation = true;
+
+    /*********************
+     * Defining a Sprite *
+     *********************/
+    function sprite (spriteParams) {
+
+        var spriteObj = {};
+
+        spriteObj.context = spriteParams.context;
+        spriteObj.width = spriteParams.width;
+        spriteObj.height = spriteParams.height;
+        spriteObj.image = spriteParams.image;
+        spriteObj.x = spriteParams.x;
+        spriteObj.y = spriteParams.y;
+
+        spriteObj.render = function () {
+            // Draw the animation
+            spriteObj.context.drawImage(
+                spriteObj.image,
+                canvas.width / 2 - spriteObj.width / 2,
+                canvas.height / 2  - spriteObj.height / 2,
+                spriteObj.width,
+                spriteObj.height,
+                spriteObj.x,
+                spriteObj.y,
+                spriteObj.width,
+                spriteObj.height);
+        };
+
+        return spriteObj;
+    }
+
+    /**********************
+     * Defining the cat *
+     **********************/
+    var catImage = new Image();
+    catImage.src = "images/cat1.png";
+
+    var cat1 = sprite({
+        context: canvas.getContext("2d"),
+        width: 250,
+        height: 250,
+        image: catImage,
+        x: 0,
+        y: 0
+    });
+
+    /**********************
+     * Defining the elephant *
+     **********************/
+    var eleImage = new Image();
+    eleImage.src = "images/ele1.png";
+
+    var ele1 = sprite({
+        context: canvas.getContext("2d"),
+        width: 250,
+        height: 250,
+        image: eleImage,
+        x: 270,
+        y: 0
+    });
+
+    /******************
+     * Show the cat *
+     ******************/
+    //cat1.render();
+    //ele1.render();
+
+    var indexToArrays = 0;
+    var numOfInstructions = 0;
+    var arrayOfPoses = [];
+    var arrayOfElePoses = [];
+    var textList =[];
+    /**************************************
+     * RUN and STOP buttons on the canvas *
+     **************************************/
+    function runCode() {
+        code = Blockly.JavaScript.workspaceToCode(workspace);
+        var formattedCode = code.split(";");
+        console.log(formattedCode);
+        document.getElementById('codeArea').innerHTML = '';
+        document.getElementById('codeArea').innerHTML += 'onRun{<br>';
+        for(var i = 0; i < formattedCode.length-1; i++){
+          document.getElementById('codeArea').innerHTML += '&nbsp;'+formattedCode[i]+';';
+          document.getElementById('codeArea').innerHTML += '<br>';
+        }
+        document.getElementById('codeArea').innerHTML += '}<br>';
+        animation = true;
+
+        try {
+            eval(code);
+        } catch (e) {
+            alert(e);
+        }
+
+        window.requestAnimationFrame(animate);
+    }
+
+    function updatePose(poseNum, catBool){
+        if (catBool){
+            arrayOfPoses.push(poseNum);
+            if (arrayOfElePoses.length == 0){
+                arrayOfElePoses.push(1);
+            } else {
+                arrayOfElePoses.push(arrayOfElePoses[arrayOfElePoses.length - 1])
+            }
+        } else {
+            arrayOfElePoses.push(poseNum);
+            if (arrayOfPoses.length == 0){
+                arrayOfPoses.push(1);
+            } else {
+                arrayOfPoses.push(arrayOfPoses[arrayOfPoses.length - 1])
+            }
+        }
+
+        numOfInstructions++;
+    }
+
+    function move(x,y, catBool){
+        if (catBool){
+            obj = cat1;
+        } else {
+            obj = ele1;
+        }
+        obj.x += x;
+        obj.y += y;
+        ctx.drawImage(obj.image, obj.x, obj.y);
+        ctx.save();
+        ctx.restore();
+
+    }
+
+    function animate() {
+        setTimeout(function() {
+            clearCanvas();
+            setcatImage(arrayOfPoses[indexToArrays]);
+            seteleImage(arrayOfElePoses[indexToArrays]);
+
+            for (text in textList){
+                t = textList[text];
+                showtext(t[0],t[1], t[2]);
+            }
+
+            indexToArrays++;
+
+            if (indexToArrays == numOfInstructions)
+                indexToArrays = 0;
+
+            if (animation) {
+                window.requestAnimationFrame(animate);
+            }
+        }, 1000);
+    }
+
+    function stopCode() {
+        animation = false;
+    }
+
+    function resetCanvas(){
+        clearCanvas();
+        setcatImage(1);
+        seteleImage(1);
+    }
+
+    /*************************************
+     * Keep the code variable up to date *
+     *************************************/
+    function myUpdateFunction(event) {
+        code = Blockly.JavaScript.workspaceToCode(workspace);
+    }
+
+    workspace.addChangeListener(myUpdateFunction);
+
+    /**********************************************************************************************
+     *                        CODE THAT GETS RUN BASED ON BLOCKLY BLOCKS                          *
+     **********************************************************************************************/
+
+    /*****************************
+     * Changing the cat's Pose *
+     *****************************/
+    function setcatImage(catIndex){
+        if(!catIndex)
+          catIndex = 1;
+        catImage.src = "images/cat"+catIndex+".png";
+        ctx.drawImage(cat1.image, cat1.x, cat1.y);
+        ctx.save();
+        ctx.restore();
+    }
+
+    function seteleImage(eleIndex){
+        if(!eleIndex)
+          eleIndex = 1;
+        eleImage.src = "images/ele"+eleIndex+".png";
+        ctx.drawImage(ele1.image, ele1.x, ele1.y);
+        ctx.save();
+        ctx.restore();
+    }
+
+    function showtext(text, x, y){
+        ctx.fillText(text, x ,y);
+        ctx.save();
+        ctx.restore();
+    }
+
+    function addtext(text, x, y){
+        textList.push([text,x,y]);
+    }
+
+    /***********************
+     * Clearing the Canvas *
+     ***********************/
+    function clearCanvas(){
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.restore();
+    }
+
+</script>
